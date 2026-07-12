@@ -8,6 +8,7 @@
 
 class QLabel;
 class QPushButton;
+class QDoubleSpinBox;
 
 class MainWindow : public QMainWindow
 {
@@ -20,11 +21,27 @@ private:
     void loadExampleCases();
     void showCase(int index);
     void runAlgorithm();
+    void showDelaunay();
+    void showMstAll();
+    void startMstStepByStep();
+    void nextMstEdge();
+    void showAllMstEdges();
+    void playStepByStep();
+    void pausePlayback();
+    void intervalChanged(double seconds);
 
     Canvas* m_canvas = nullptr;
     QLabel* m_title = nullptr;
     QLabel* m_status = nullptr;
     QPushButton* m_runButton = nullptr;
+    QPushButton* m_playButton = nullptr;
+    QPushButton* m_pauseButton = nullptr;
+    QPushButton* m_delaunayButton = nullptr;
+    QPushButton* m_mstAllButton = nullptr;
+    QPushButton* m_mstStepButton = nullptr;
+    QPushButton* m_nextEdgeButton = nullptr;
+    QPushButton* m_showAllEdgesButton = nullptr;
+    QDoubleSpinBox* m_intervalSpin = nullptr;
     QVector<QVector<QPointF>> m_cases;
     int m_caseIndex = 0;
 };

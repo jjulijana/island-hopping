@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     const bool consoleMode = argc >= 2 && std::string(argv[1]) == "--console";
 
     if (consoleMode) {
-        const char* inputPath = (argc >= 3) ? argv[2] : "example.txt";
+        const char* inputPath = (argc >= 3) ? argv[2] : "stress_test.txt";
         return runConsoleMode(inputPath);
     }
 

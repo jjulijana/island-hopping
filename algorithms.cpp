@@ -70,7 +70,16 @@ struct UnionFind {
     }
 };
 
-pair<double, vector<pair<int, int>>> computeMST(const vector<Point>& points, const vector<pair<int, int>>& delaunayEdges) {
+struct MstComputation {
+    double totalLength = 0.0;
+    vector<pair<int, int>> consideredEdges;
+    vector<double> consideredLengths;
+    vector<bool> consideredAccepted;
+    vector<pair<int, int>> mstEdges;
+    vector<double> mstEdgeLengths;
+};
+
+MstComputation computeMST(const vector<Point>& points, const vector<pair<int, int>>& delaunayEdges) {
     int n = static_cast<int>(points.size());
     vector<tuple<double, int, int>> edges;
     edges.reserve(delaunayEdges.size());
@@ -82,24 +91,34 @@ pair<double, vector<pair<int, int>>> computeMST(const vector<Point>& points, con
     sort(edges.begin(), edges.end()); // Sortirane po tezini (distanci)
 
     UnionFind uf(n);
-    double totalLen = 0.0;
-    vector<pair<int, int>> mstEdges; // Inicijalizacija vektora za stablo minimalnog razapinjanja
-    mstEdges.reserve(max(0, n - 1));
+    MstComputation computation;
+    computation.consideredEdges.reserve(edges.size());
+    computation.consideredLengths.reserve(edges.size());
+    computation.consideredAccepted.reserve(edges.size());
+    computation.mstEdges.reserve(max(0, n - 1));
+    computation.mstEdgeLengths.reserve(max(0, n - 1));
 
     int edgesUsed = 0;
     for (auto& [w, u, v] : edges) {
+        computation.consideredEdges.push_back({u, v});
+        computation.consideredLengths.push_back(w);
+        bool accepted = false;
         if (uf.unite(u, v)) { // Ako su u različitim komponentama, spojimo ih
-            totalLen += w; 
+            computation.totalLength += w;
+            accepted = true;
             if (u > v) {
                 swap(u, v); // Rastuci redosled
             }
-            mstEdges.push_back({u, v});
+            computation.mstEdges.push_back({u, v});
+            computation.mstEdgeLengths.push_back(w);
             edgesUsed++;
             if (edgesUsed == n - 1) {
+                computation.consideredAccepted.push_back(accepted);
                 break; // Iskoristili sve
             }
         }
+        computation.consideredAccepted.push_back(accepted);
     }
 
-    return {totalLen, mstEdges};
+    return computation;
 }
