@@ -22,11 +22,10 @@ public:
     void setPoints(const QVector<QPointF>& points);
     void setResult(const SolverResult& result);
     void showDelaunay();
-    void showMstAll();
+    void showMstAll();          // final MST only, no considered/rejected edges
     void showMstStepByStep();
     void playStepByStep();
     void nextMstEdge();
-    void showAllMstEdges();
     void pausePlayback();
     void setStepIntervalMs(int ms);
 
@@ -39,6 +38,7 @@ private:
     void drawGrid(QPainter& painter);
     void drawDelaunay(QPainter& painter, const QVector<QPointF>& fittedPoints);
     void drawMst(QPainter& painter, const QVector<QPointF>& fittedPoints);
+    void drawFinalMst(QPainter& painter, const QVector<QPointF>& fittedPoints);
     void drawPoints(QPainter& painter, const QVector<QPointF>& fittedPoints);
     void setPhase(Phase phase);
     void advancePlayback();
@@ -47,6 +47,7 @@ private:
     SolverResult m_result;
     bool m_hasResult = false;
     Phase m_phase = Idle;
+    bool m_finalOnly = false;
     int m_visibleDelaunayEdges = 0;
     int m_visibleMstEdges = 0;
     int m_stepIntervalMs = 500;

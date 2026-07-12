@@ -33,7 +33,6 @@ MainWindow::MainWindow(QWidget* parent)
     m_mstAllButton = new QPushButton("Show MST");
     m_mstStepButton = new QPushButton("MST step mode");
     m_nextEdgeButton = new QPushButton("Next MST edge");
-    m_showAllEdgesButton = new QPushButton("Show all MST edges");
     m_intervalSpin = new QDoubleSpinBox;
     m_intervalSpin->setRange(0.1, 5.0);
     m_intervalSpin->setSingleStep(0.1);
@@ -55,7 +54,6 @@ MainWindow::MainWindow(QWidget* parent)
     controlRow->addWidget(m_mstAllButton);
     controlRow->addWidget(m_mstStepButton);
     controlRow->addWidget(m_nextEdgeButton);
-    controlRow->addWidget(m_showAllEdgesButton);
     controlRow->addWidget(new QLabel("Interval"));
     controlRow->addWidget(m_intervalSpin);
     root->addLayout(controlRow);
@@ -89,7 +87,6 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_mstAllButton, &QPushButton::clicked, this, &MainWindow::showMstAll);
     connect(m_mstStepButton, &QPushButton::clicked, this, &MainWindow::startMstStepByStep);
     connect(m_nextEdgeButton, &QPushButton::clicked, this, &MainWindow::nextMstEdge);
-    connect(m_showAllEdgesButton, &QPushButton::clicked, this, &MainWindow::showAllMstEdges);
     connect(m_intervalSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::intervalChanged);
 
     loadExampleCases();
@@ -189,12 +186,6 @@ void MainWindow::nextMstEdge()
 {
     m_canvas->nextMstEdge();
     m_status->setText("Advanced one MST edge.");
-}
-
-void MainWindow::showAllMstEdges()
-{
-    m_canvas->showAllMstEdges();
-    m_status->setText("All MST edges shown.");
 }
 
 void MainWindow::playStepByStep()

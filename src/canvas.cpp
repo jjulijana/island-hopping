@@ -26,14 +26,26 @@ qreal pointDistance(const QPointF& a, const QPointF& b)
     return std::sqrt(dx * dx + dy * dy);
 }
 
-QVector<QPointF> mapEdgesToPoints(const QVector<QPointF>& points, const QRectF& src, const QRectF& dst)
+void drawLengthLabel(QPainter& painter, const QPalette& palette, const QPointF& mid, double length)
 {
-    QVector<QPointF> fitted;
-    fitted.reserve(points.size());
-    for (const auto& point : points) {
-        fitted.append(mapPoint(point, src, dst));
-    }
-    return fitted;
+    const QString lengthText = QString::number(length, 'f', 1);
+
+    QFont labelFont = painter.font();
+    labelFont.setPointSizeF(8.0);
+    labelFont.setBold(true);
+    painter.setFont(labelFont);
+
+    QFontMetricsF metrics(labelFont);
+    const QRectF textRect = metrics.boundingRect(lengthText);
+    QRectF bubbleRect = textRect.adjusted(-4, -2, 4, 2);
+    bubbleRect.moveCenter(mid + QPointF(0, -10));
+
+    painter.setPen(Qt::NoPen);
+    painter.setBrush(QColor(255, 255, 255, 215));
+    painter.drawRoundedRect(bubbleRect, 3, 3);
+
+    painter.setPen(Qt::black);
+    painter.drawText(bubbleRect, Qt::AlignCenter, lengthText);
 }
 }
 
@@ -51,6 +63,7 @@ void Canvas::reset()
     m_result = {};
     m_hasResult = false;
     m_phase = Idle;
+    m_finalOnly = false;
     m_visibleDelaunayEdges = 0;
     m_visibleMstEdges = 0;
     m_playTimer.stop();
@@ -62,6 +75,7 @@ void Canvas::setPoints(const QVector<QPointF>& points)
     m_pts = points;
     m_hasResult = false;
     m_phase = Idle;
+    m_finalOnly = false;
     m_visibleDelaunayEdges = 0;
     m_visibleMstEdges = 0;
     m_playTimer.stop();
@@ -72,6 +86,7 @@ void Canvas::setResult(const SolverResult& result)
 {
     m_result = result;
     m_hasResult = true;
+    m_finalOnly = false;
     m_visibleDelaunayEdges = 0;
     m_visibleMstEdges = 0;
     m_playTimer.stop();
@@ -97,8 +112,8 @@ void Canvas::showMstAll()
     }
 
     m_playTimer.stop();
+    m_finalOnly = true;
     setPhase(ShowMst);
-    m_visibleMstEdges = m_result.mstEdges.size();
     m_visibleDelaunayEdges = m_result.delaunayEdges.size();
     update();
 }
@@ -110,6 +125,7 @@ void Canvas::showMstStepByStep()
     }
 
     m_playTimer.stop();
+    m_finalOnly = false;
     setPhase(ShowMst);
     m_visibleDelaunayEdges = m_result.delaunayEdges.size();
     m_visibleMstEdges = 0;
@@ -122,6 +138,7 @@ void Canvas::playStepByStep()
         return;
     }
 
+    m_finalOnly = false;
     setPhase(ShowDelaunay);
     m_visibleDelaunayEdges = 0;
     m_visibleMstEdges = 0;
@@ -131,24 +148,14 @@ void Canvas::playStepByStep()
 
 void Canvas::nextMstEdge()
 {
-    if (m_phase != ShowMst || !m_hasResult) {
+    if (m_phase != ShowMst || !m_hasResult || m_finalOnly) {
         return;
     }
 
-    if (m_visibleMstEdges < m_result.mstEdges.size()) {
+    if (m_visibleMstEdges < m_result.mstConsideredEdges.size()) {
         ++m_visibleMstEdges;
         update();
     }
-}
-
-void Canvas::showAllMstEdges()
-{
-    if (m_phase != ShowMst || !m_hasResult) {
-        return;
-    }
-
-    m_visibleMstEdges = m_result.mstEdges.size();
-    update();
 }
 
 void Canvas::pausePlayback()
@@ -240,7 +247,11 @@ void Canvas::paintEvent(QPaintEvent*)
         drawDelaunay(painter, fittedPoints);
     } else if (m_phase == ShowMst) {
         drawDelaunay(painter, fittedPoints);
-        drawMst(painter, fittedPoints);
+        if (m_finalOnly) {
+            drawFinalMst(painter, fittedPoints);
+        } else {
+            drawMst(painter, fittedPoints);
+        }
     }
     drawPoints(painter, fittedPoints);
 
@@ -335,25 +346,44 @@ void Canvas::drawMst(QPainter& painter, const QVector<QPointF>& fittedPoints)
             const double treeLength = (i < m_result.mstConsideredEdgeLengths.size())
                 ? m_result.mstConsideredEdgeLengths[i]
                 : pointDistance(a, b);
-            const QString lengthText = QString::number(treeLength, 'f', 1);
+            drawLengthLabel(painter, palette(), mid, treeLength);
 
-            QFont labelFont = painter.font();
-            labelFont.setPointSizeF(8.0);
-            labelFont.setBold(true);
-            painter.setFont(labelFont);
-
-            QFontMetricsF metrics(labelFont);
-            const QRectF textRect = metrics.boundingRect(lengthText);
-            QRectF bubbleRect = textRect.adjusted(-4, -2, 4, 2);
-            bubbleRect.moveCenter(mid + QPointF(0, -10));
-
-            painter.setPen(Qt::NoPen);
-            painter.setBrush(QColor(255, 255, 255, 215));
-            painter.drawRoundedRect(bubbleRect, 3, 3);
-
-            painter.setPen(palette().color(QPalette::Text));
-            painter.drawText(bubbleRect, Qt::AlignCenter, lengthText);
+            painter.setPen(greenGlow);
         }
+    }
+}
+
+void Canvas::drawFinalMst(QPainter& painter, const QVector<QPointF>& fittedPoints)
+{
+    if (!m_hasResult || m_result.mstEdges.isEmpty()) {
+        return;
+    }
+
+    QPen greenGlow(QColor(30, 180, 70, 110), 6.0, Qt::SolidLine, Qt::RoundCap);
+    QPen greenPen(QColor(30, 180, 70), 3.0, Qt::SolidLine, Qt::RoundCap);
+
+    for (int i = 0; i < m_result.mstEdges.size(); ++i) {
+        const auto& edge = m_result.mstEdges[i];
+        const int u = edge.first;
+        const int v = edge.second;
+        if (u < 0 || u >= fittedPoints.size() || v < 0 || v >= fittedPoints.size()) {
+            continue;
+        }
+
+        const QPointF a = fittedPoints[u];
+        const QPointF b = fittedPoints[v];
+
+        painter.setPen(greenGlow);
+        painter.drawLine(a, b);
+
+        painter.setPen(greenPen);
+        painter.drawLine(a, b);
+
+        const QPointF mid = (a + b) / 2.0;
+        const double treeLength = (i < m_result.mstEdgeLengths.size())
+            ? m_result.mstEdgeLengths[i]
+            : pointDistance(a, b);
+        drawLengthLabel(painter, palette(), mid, treeLength);
     }
 }
 
