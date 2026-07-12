@@ -1,7 +1,8 @@
+#pragma once
 #include <bits/stdc++.h>
 using namespace std;
 
-const double EPS = EPS;
+const double EPS = 1e-9;
 
 struct Point {
     double x, y;
