@@ -1,11 +1,13 @@
 #pragma once
 #include "components.h"
-#include <utility>
-#include <vector>
+
+#include <QPair>
+#include <QPointF>
+#include <QVector>
 
 struct SolverResult {
-    std::vector<std::pair<int, int>> delaunayEdges;
-    std::vector<std::pair<int, int>> mstEdges;
+    QVector<QPair<int, int>> delaunayEdges;
+    QVector<QPair<int, int>> mstEdges;
     double mstLength = 0.0;
 }; 
 
@@ -13,6 +15,6 @@ class Solver
 {
 
 public: 
-    static SolverResult solve(const std::vector<Point>& points); 
+    static SolverResult solve(const QVector<QPointF>& points); 
 
 }; 

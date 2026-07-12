@@ -1,13 +1,16 @@
 #include "solver.h"
 #include "algorithms.cpp"
 
-SolverResult Solver::solve(const std::vector<Point>& points) {
-    std::vector<Point> pts = points;
+#include <vector>
 
-    for (int i = 0; i < static_cast<int>(pts.size()); ++i) {
-        pts[i].id = i;
+SolverResult Solver::solve(const QVector<QPointF>& points) {
+    std::vector<Point> pts;
+    pts.reserve(points.size());
+
+    for (int i = 0; i < points.size(); ++i) {
+        pts.push_back({points[i].x(), points[i].y(), i});
     }
-    
+
     SolverResult result;
     if (pts.size() == 1) {
         result.mstLength = 0.0;
@@ -15,8 +18,8 @@ SolverResult Solver::solve(const std::vector<Point>& points) {
     }
 
     if (pts.size() == 2) {
-        result.delaunayEdges.push_back({0, 1});
-        result.mstEdges.push_back({0, 1});
+        result.delaunayEdges.append({0, 1});
+        result.mstEdges.append({0, 1});
         result.mstLength = dist(pts[0], pts[1]);
         return result;
     }
@@ -25,11 +28,11 @@ SolverResult Solver::solve(const std::vector<Point>& points) {
     auto [len, mstEdges] = computeMST(pts, delEdges);
     
     for (const auto& [u, v] : delEdges) {
-        result.delaunayEdges.push_back({u, v});
+        result.delaunayEdges.append({u, v});
     }
         
     for (const auto& [u, v] : mstEdges) {
-        result.mstEdges.push_back({u, v});
+        result.mstEdges.append({u, v});
     }
 
     result.mstLength = len;
