@@ -26,7 +26,7 @@ qreal pointDistance(const QPointF& a, const QPointF& b)
     return std::sqrt(dx * dx + dy * dy);
 }
 
-void drawLengthLabel(QPainter& painter, const QPalette& palette, const QPointF& mid, double length)
+void drawLengthLabel(QPainter& painter, const QPointF& mid, double length)
 {
     const QString lengthText = QString::number(length, 'f', 1);
 
@@ -346,7 +346,7 @@ void Canvas::drawMst(QPainter& painter, const QVector<QPointF>& fittedPoints)
             const double treeLength = (i < m_result.mstConsideredEdgeLengths.size())
                 ? m_result.mstConsideredEdgeLengths[i]
                 : pointDistance(a, b);
-            drawLengthLabel(painter, palette(), mid, treeLength);
+            drawLengthLabel(painter, mid, treeLength);
 
             painter.setPen(greenGlow);
         }
@@ -383,7 +383,7 @@ void Canvas::drawFinalMst(QPainter& painter, const QVector<QPointF>& fittedPoint
         const double treeLength = (i < m_result.mstEdgeLengths.size())
             ? m_result.mstEdgeLengths[i]
             : pointDistance(a, b);
-        drawLengthLabel(painter, palette(), mid, treeLength);
+        drawLengthLabel(painter, mid, treeLength);
     }
 }
 
