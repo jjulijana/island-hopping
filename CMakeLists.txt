@@ -17,11 +17,13 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
 add_executable(island-hopping
-    main.cpp
-    mainwindow.cpp
-    canvas.cpp
-    solver.cpp
+    src/main.cpp
+    src/mainwindow.cpp
+    src/canvas.cpp
+    src/solver.cpp
+    include/canvas.h
+    include/mainwindow.h
 )
 
-target_include_directories(island-hopping PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(island-hopping PRIVATE include)
 target_link_libraries(island-hopping PRIVATE CGAL::CGAL Qt6::Widgets)

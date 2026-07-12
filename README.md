@@ -5,6 +5,7 @@ You are a contractor for the small independent nation of Microisles, which is fa
 ## Running app
 
 ```
+mkdir build
 cmake -S . -B build
 cmake --build build
 ```

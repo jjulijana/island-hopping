@@ -7,6 +7,8 @@
 #include <QDoubleSpinBox>
 #include <QTextStream>
 #include <QVBoxLayout>
+#include <QCoreApplication>
+#include <QDir>
 
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
@@ -98,9 +100,16 @@ MainWindow::MainWindow(QWidget* parent)
     }
 }
 
+QString dataFilePath(const QString& filename)
+{
+    QDir dir(QCoreApplication::applicationDirPath());
+    dir.cdUp();
+    return dir.filePath("tests/" + filename);
+}
+
 void MainWindow::loadExampleCases()
 {
-    QFile file("10cases.txt");
+    QFile file(dataFilePath("10cases.txt"));
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         m_title->setText("could not open 10cases.txt");
         return;
