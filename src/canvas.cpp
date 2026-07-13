@@ -26,6 +26,21 @@ qreal pointDistance(const QPointF& a, const QPointF& b)
     return std::sqrt(dx * dx + dy * dy);
 }
 
+QRectF centeredUniformRect(const QRectF& src, const QRectF& dst)
+{
+    if (src.width() <= 0.0 || src.height() <= 0.0 || dst.width() <= 0.0 || dst.height() <= 0.0) {
+        return dst;
+    }
+
+    const qreal scale = std::min(dst.width() / src.width(), dst.height() / src.height());
+    const qreal w = src.width() * scale;
+    const qreal h = src.height() * scale;
+
+    QRectF fitted(0, 0, w, h);
+    fitted.moveCenter(dst.center());
+    return fitted;
+}
+
 void drawLengthLabel(QPainter& painter, const QPointF& mid, double length)
 {
     const QString lengthText = QString::number(length, 'f', 1);
@@ -225,7 +240,8 @@ QVector<QPointF> Canvas::fitPoints() const
     }
 
     QRectF src(minX, minY, std::max<qreal>(maxX - minX, 1.0), std::max<qreal>(maxY - minY, 1.0));
-    const QRectF dst = rect().adjusted(70, 55, -70, -55);
+    const QRectF available = rect().adjusted(70, 55, -70, -55);
+    const QRectF dst = centeredUniformRect(src, available);
 
     QVector<QPointF> fitted;
     fitted.reserve(m_pts.size());
