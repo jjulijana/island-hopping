@@ -1,0 +1,173 @@
+\documentclass[11pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[croatian]{babel}
+\usepackage[margin=1.9cm]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{titlesec}
+\usepackage{booktabs}
+
+\titlespacing*{\section}{0pt}{6pt}{3pt}
+\titlespacing*{\subsection}{0pt}{4pt}{2pt}
+\setlength{\parskip}{1pt}
+\setlength{\abovedisplayskip}{3pt}
+\setlength{\belowdisplayskip}{3pt}
+\setlength{\textfloatsep}{4pt}
+\setlength{\floatsep}{2pt}
+\setlength{\intextsep}{3pt}
+\renewcommand{\baselinestretch}{0.97}
+
+\newtheorem{definition}{Definicija}[section]
+
+\hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue}
+
+\begin{document}
+\sloppy
+
+\title{\vspace{-1.5cm}Rešavanje problema \emph{Island Hopping}: \\ konstrukcija minimalnog razapinjućeg stabla \\ pomoću Delone triangulacije
+\\[0.3cm]
+\small{Projekat u okviru kursa Geometrijski algoritmi\\ Matematički fakultet}}
+\author{Julijana Jevtić, 1131/2025\\ mi251131@alas.matf.bg.ac.rs}
+\date{2. septembar 2026.}
+\maketitle
+
+\tableofcontents
+
+\section{Uvod i formulacija problema}
+
+Problem \emph{Island Hopping}\footnote{Zvanična formulacija problema dostupna je na Kattis platformi: \url{https://open.kattis.com/problems/islandhopping}.} predstavlja klasičan primer problema \textbf{minimalnog razapinjućeg stabla} (\emph{Minimum Spanning Tree} -- MST) nad tačkama u euklidskoj ravni. Ulaz čini skup od $m$ ostrva ($1 \le m \le 750$), gde je svako ostrvo predstavljeno tačkom $(x_i, y_i) \in \mathbb{R}^2$, uz do 10 test primera po pokretanju programa \cite{kattis}. Cilj je pronaći skup mostova (ivica) koji povezuje sva ostrva u jednu celinu tako da je zbir dužina mostova minimalan. Formalno, posmatra se potpun graf $G = (V, E)$, gde je $V$ skup ostrva, a težina svake ivice $(i,j) \in E$ jednaka je euklidskom rastojanju
+\[
+d(i,j) = \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}.
+\]
+Rešenje je stablo $T \subseteq E$ koje povezuje sve tačke iz $V$ uz minimalnu ukupnu težinu $\sum_{e \in T} w(e)$.
+
+Naivan pristup zahteva razmatranje svih $\binom{m}{2} = O(m^2)$ ivica potpunog grafa, a zatim primenu standardnog MST algoritma (Kruskal ili Prim), što daje složenost $O(m^2 \log m)$. Rešenje implementirano u ovom projektu umesto toga koristi geometrijsko svojstvo problema kako bi se broj razmatranih ivica sveo sa $O(m^2)$ na $O(m)$, čime se dobija efikasniji algoritam zasnovan na \textbf{Deloneevoj triangulaciji}.
+
+\section{Teorijska pozadina}
+
+\subsection{Delone triangulacija}
+
+\begin{definition}[Triangulacija, \cite{janicic}]
+\label{def:triangulacija}
+Neka je $\mathcal{P} = \{P_1, P_2, \ldots, P_n\}$ skup tačaka u ravni.
+\emph{Triangulacija} skupa $\mathcal{P}$ je maksimalno ravansko razlaganje sa
+skupom temena $\mathcal{P}$. Razlaganje je maksimalno ako se dodavanjem
+stranice koja spaja bilo koja dva temena skupa $\mathcal{P}$ narušava
+planarnost razlaganja.
+\end{definition}
+
+\begin{definition}[Delone triangulacija, \cite{janicic}]
+\label{def:delone}
+Neka je $\mathcal{T}$ triangulacija skupa tačaka $\mathcal{P}$ u ravni
+(Definicija~\ref{def:triangulacija}). Triangulacija $\mathcal{T}$ je
+\emph{Delone triangulacija} za $\mathcal{P}$ ako i samo ako unutrašnjost
+nijednog opisanog kruga oko trougla iz $\mathcal{T}$ ne sadrži neku tačku
+iz $\mathcal{P}$.
+\end{definition}
+
+Broj ivica Delone triangulacije je linearan u broju tačaka. Pošto je $DT(P)$ planaran graf, iz Ojlerove formule za planarne grafove ($V - E + F = 2$) direktno sledi da za $m \ge 3$ tačaka koje nisu sve kolinearne važi
+\[
+|E_{DT}| \le 3m - 6,
+\]
+što je ključno za analizu složenosti u sekciji 4.
+
+\subsection{Kruskalov algoritam i Union-Find struktura}
+
+Kruskalov algoritam konstruiše MST tako što ivice grafa sortira po težini u rastućem redosledu, a zatim ih redom razmatra: ivica se prihvata ako povezuje dve različite komponente povezanosti (čime se izbegava ciklus), a odbacuje ako oba njena čvora već pripadaju istoj komponenti \cite{cormen}. Efikasna implementacija ove provere zahteva strukturu podataka \textbf{Union-Find} (\emph{Disjoint Set Union}), koja podržava dve operacije: \texttt{find(x)} (pronalaženje reprezentativnog elementa komponente kojoj $x$ pripada) i \texttt{union(x, y)} (spajanje dve komponente )\cite{cormen}. Uz optimizacije \emph{path compression} i \emph{union by rank}, amortizovana složenost obe operacije je $O(\alpha(m))$, gde je $\alpha$ inverzna Ackermanova funkcija -- za sve praktične vrednosti $m$ ova funkcija je manja od 5, pa se operacije smatraju praktično konstantnim \cite[Teorema 21.14]{cormen}.
+
+\subsection{Teorema o podskupu: MST $\subseteq$ Delone triangulacija}
+
+Ključno teorijsko svojstvo na kome se zasniva ovo rešenje glasi:
+
+\begin{quote}
+\textbf{Teorema.} Za proizvoljan skup tačaka $P$ u opštoj poziciji, minimalno razapinjuće stablo nad potpunim  grafom $K(P)$ jeste podgraf Delone triangulacije $DT(P)$, tj. $MST(P) \subseteq DT(P)$.
+\end{quote}
+Skica dokaza zasniva se na kontrapoziciji: pretpostavimo da ivica $(u,v) \in MST(P)$ ne pripada $DT(P)$. Tada, po definiciji Delone triangulacije, ne postoji kružnica kroz $u$ i $v$ koja ne sadrži ostale tačke -- svaka takva kružnica sadrži bar jednu dodatnu tačku $w$. Može se pokazati da tada važi $\max(d(u,w), d(v,w)) < d(u,v)$, što znači da bi zamena ivice $(u,v)$ ivicama $(u,w)$ i $(w,v)$ (ili samo jednom od njih, u kombinaciji sa preostalim stablom) dala razapinjuće stablo manje ukupne težine -- kontradikcija sa pretpostavkom da je $(u,v)$ deo \emph{minimalnog} stabla \cite[Teorema 6.9]{preparata_shamos}. Ova teorema opravdava da implementacija MST ne traži nad svih $O(m^2)$ ivica, već isključivo nad $O(m)$ ivica Delone triangulacije, bez gubitka tačnosti rešenja.
+
+\section{Arhitektura implementacije}
+
+Rešenje je organizovano u tri logičke celine: reprezentaciju geometrijskih primitiva (\texttt{components.h}), konstrukciju Delone triangulacije i računanje MST-a (\texttt{solver.cpp}), i Qt sloj za učitavanje ulaza i vizuelizaciju (\texttt{mainwindow}, \texttt{canvas}).\\
+Osnovna struktura \texttt{Point} čuva koordinate $(x, y)$ i identifikator ostrva:
+\begin{verbatim}
+struct Point { double x, y; int id; };
+\end{verbatim}
+
+\subsection{Konstrukcija Delone triangulacije (CGAL)}
+
+Triangulacija se konstruiše pomoću biblioteke \textbf{CGAL} (\emph{Computational Geometry Algorithms Library}), konkretno klase \texttt{Delone\allowbreak\_triangulation\allowbreak\_2} nad kernelom \texttt{Exact\allowbreak\_predicates\allowbreak\_inexact\allowbreak\_constructions\allowbreak\_kernel}. Ovaj kernel koristi tačnu (egzaktnu) aritmetiku isključivo za geometrijske \emph{predikate} (npr. test ,,da li tačka leži unutar kružnice''), dok se same koordinate čuvaju kao brojevi u dvostrukoj preciznosti (\texttt{double}) -- kompromis koji obezbeđuje robusnost triangulacije. CGAL interno gradi triangulaciju inkrementalnim randomizovanim algoritmom u očekivanoj vremenskoj složenosti $O(m \log m)$.
+
+Nakon umetanja svih tačaka, traženi skup se izdvaja iteracijom kroz \texttt{finite\_edges}, uz eksplicitno preskakanje ivica koje uključuju ,,beskonačni'' čvor (pomoćni čvor koji CGAL koristi za predstavljanje spoljašnje granice triangulacije), i deduplikaciju parova $(id_1, id_2)$ pomoću \texttt{std::set}.
+
+\subsection{Kruskalov algoritam nad Delone ivicama}
+
+Funkcija \texttt{computeMST} prima skup Delone ivica, sortira ih po dužini, i primenjuje Kruskalov algoritam koristeći \texttt{UnionFind} strukturu sa \emph{path compression} (linija 2 dole) i \emph{union by rank}:
+
+\begin{algorithm}[h]
+\caption{Kruskalov algoritam nad Delone ivicama}
+\begin{algorithmic}[1]
+\Function{computeMST}{tačke $P$, Delone ivice $E_{DT}$}
+    \State $edges \gets$ sortiraj $E_{DT}$ po rastućoj težini $d(u,v)$
+    \State $uf \gets$ nova Union-Find struktura nad $|P|$ elemenata
+    \State $total \gets 0$, $count \gets 0$
+    \For{$(w, u, v) \in edges$}
+        \If{$uf.\text{union}(u, v)$} \Comment{$u,v$ su u različitim komponentama}
+            \State $total \gets total + w$
+            \State $count \gets count + 1$
+            \If{$count = |P| - 1$} \textbf{break} \EndIf
+        \EndIf
+    \EndFor
+    \State \Return $total$
+\EndFunction
+\end{algorithmic}
+\end{algorithm}
+
+Implementacija dodatno beleži sve razmatrane ivice i njihov status (prihvaćena/odbačena), što se koristi isključivo u vizuelizaciji (koraka po korak prikaz algoritma), bez uticaja na ispravnost samog rezultata.
+
+\section{Analiza vremenske i prostorne složenosti}
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Korak} & \textbf{Složenost} & \textbf{Napomena} \\
+\midrule
+Konstrukcija $DT(P)$ (CGAL) & $O(m \log m)$ & randomizovani inkrementalni algoritam \\
+Broj ivica u $DT(P)$ & $O(m)$ & tačnije, $\le 3m-6$ (Ojlerova formula) \\
+Sortiranje ivica & $O(m \log m)$ & jer je $|E_{DT}| = O(m)$ \\
+Kruskal + Union-Find & $O(m\,\alpha(m))$ & praktično linearno \\
+\midrule
+\textbf{Ukupno} & $O(m \log m)$ & naspram $O(m^2 \log m)$ naivnog pristupa \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Prostorna složenost je $O(m)$, jer se čuvaju samo tačke i $O(m)$ ivica Delone triangulacije, za razliku od $O(m^2)$ memorije koju bi zahtevalo eksplicitno predstavljanje potpunog grafa. Za maksimalnu veličinu ulaza ($m = 750$, do $10$ test primera po pokretanju), ova razlika u praksi znači da program radi u milisekundama, dok bi naivan pristup i dalje bio izvodljiv, ali sa znatno većim konstantnim faktorom usled građenja i sortiranja $\binom{750}{2} \approx 280{,}875$ ivica po test primeru u odnosu na najviše $3 \cdot 750 - 6 = 2244$ Delone ivice.
+
+Posebno posmatramo granične slučajeve $m=1$ (stablo je prazno) i $m=2$ (jedina moguća ivica je direktno rastojanje između dve tačke), koji se u implementaciji tretiraju posebno, bez pozivanja Delone triangulacije, čime se izbegava degenerisan slučaj triangulacije nad manje od tri tačke.
+
+\section{Ispravnost rešenja}
+
+Ispravnost implementiranog algoritma proizilazi direktno iz teoreme iz sekcije 2.3: pošto je $MST(P) \subseteq DT(P)$ garantovano za svaki skup tačaka u opštem slučaju, primena Kruskalovog algoritma isključivo nad ivicama $DT(P)$ mora proizvesti \emph{identično} stablo kao i primena istog algoritma nad svim $O(m^2)$ ivicama potpunog grafa -- razlika je isključivo u efikasnosti pretrage, ne u skupu razmatranih kandidata za konačno rešenje. Korektnost same Union-Find strukture, da nikada ne dozvoljava formiranje ciklusa i da na kraju daje povezano stablo kada je ulazni graf povezan, nam je dobro poznat rezultat teorije algoritama \cite{cormen}.
+
+\section{Zaključak}
+
+Predstavljeno rešenje kombinuje geometrijski uvid (svojstvo $MST \subseteq DT$) sa klasičnim grafovskim algoritmom (Kruskal + Union-Find) kako bi se problem minimalnog razapinjućeg stabla nad ostrvima rešio u vremenu $O(m \log m)$ umesto $O(m^2 \log m)$, uz korišćenje numerički robusne CGAL implementacije Delone triangulacije. Ovakav pristup predstavlja praktičan primer kako geometrijsko strukturiranje ulaza (ograničavanje kandidata na $O(m)$ umesto $O(m^2)$ ivica) može dati suštinsko ubrzanje bez ikakvog kompromisa u tačnosti rezultata.
+
+\begin{thebibliography}{9}
+\bibitem{kattis} Kattis, \emph{Island Hopping} -- specifikacija problema, \url{https://open.kattis.com/problems/islandhopping}.
+\bibitem{janicic}
+P.~Janičić,
+\emph{Računarska geometrija},
+Matematički fakultet Univerziteta u Beogradu, Beograd, 2025,
+\url{https://poincare.matf.bg.ac.rs/~predrag.janicic/courses/ga.pdf}.
+\bibitem{preparata_shamos} F.~P.~Preparata, M.~I.~Shamos, \emph{Computational Geometry: An Introduction}, Springer-Verlag, 1985.
+\bibitem{cormen} T.~H.~Cormen, C.~E.~Leiserson, R.~L.~Rivest, C.~Stein, \emph{Introduction to Algorithms}, 3rd ed., MIT Press, 2009.
+\bibitem{cgal} CGAL Project, \emph{CGAL User and Reference Manual: 2D Triangulations}, \url{https://doc.cgal.org/latest/Triangulation_2/}.
+\end{thebibliography}
+
+\end{document}
