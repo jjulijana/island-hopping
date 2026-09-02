@@ -8,6 +8,7 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \usepackage{enumitem}
+\usepackage{amsthm}
 \usepackage{hyperref}
 \usepackage{xcolor}
 \usepackage{titlesec}
@@ -23,7 +24,10 @@
 \setlength{\intextsep}{3pt}
 \renewcommand{\baselinestretch}{0.97}
 
+\theoremstyle{definition}
 \newtheorem{definition}{Definicija}[section]
+\newtheorem{theorem}{Teorema}[section]
+\floatname{algorithm}{Algoritam}
 
 \hypersetup{colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue}
 
@@ -37,17 +41,18 @@
 \date{2. septembar 2026.}
 \maketitle
 
+\vspace{-0.5cm}
 \tableofcontents
-
+\vspace{0.5cm}
 \section{Uvod i formulacija problema}
 
-Problem \emph{Island Hopping}\footnote{Zvanična formulacija problema dostupna je na Kattis platformi: \url{https://open.kattis.com/problems/islandhopping}.} predstavlja klasičan primer problema \textbf{minimalnog razapinjućeg stabla} (\emph{Minimum Spanning Tree} -- MST) nad tačkama u euklidskoj ravni. Ulaz čini skup od $m$ ostrva ($1 \le m \le 750$), gde je svako ostrvo predstavljeno tačkom $(x_i, y_i) \in \mathbb{R}^2$, uz do 10 test primera po pokretanju programa \cite{kattis}. Cilj je pronaći skup mostova (ivica) koji povezuje sva ostrva u jednu celinu tako da je zbir dužina mostova minimalan. Formalno, posmatra se potpun graf $G = (V, E)$, gde je $V$ skup ostrva, a težina svake ivice $(i,j) \in E$ jednaka je euklidskom rastojanju
+Problem \emph{Island Hopping}\footnote{Zvanična formulacija problema dostupna je na Kattis platformi \cite{kattis}.} predstavlja klasičan primer problema \textbf{minimalnog razapinjućeg stabla} (\emph{Minimum Spanning Tree} -- MST) nad tačkama u euklidskoj ravni. Ulaz čini skup od $m$ ostrva ($1 \le m \le 750$), gde je svako ostrvo predstavljeno tačkom $(x_i, y_i) \in \mathbb{R}^2$, uz do 10 test primera po pokretanju programa \cite{kattis}. Cilj je napraviti skup mostova (ivica) koji povezuje sva ostrva u jednu celinu tako da je zbir dužina mostova minimalan i da građanima više ne budu potrebni brodovi. Formalno, posmatra se potpun graf $G = (V, E)$, gde je $V$ skup ostrva, a težina svake ivice $(i,j) \in E$ jednaka je euklidskom rastojanju
 \[
 d(i,j) = \sqrt{(x_i - x_j)^2 + (y_i - y_j)^2}.
 \]
 Rešenje je stablo $T \subseteq E$ koje povezuje sve tačke iz $V$ uz minimalnu ukupnu težinu $\sum_{e \in T} w(e)$.
 
-Naivan pristup zahteva razmatranje svih $\binom{m}{2} = O(m^2)$ ivica potpunog grafa, a zatim primenu standardnog MST algoritma (Kruskal ili Prim), što daje složenost $O(m^2 \log m)$. Rešenje implementirano u ovom projektu umesto toga koristi geometrijsko svojstvo problema kako bi se broj razmatranih ivica sveo sa $O(m^2)$ na $O(m)$, čime se dobija efikasniji algoritam zasnovan na \textbf{Deloneevoj triangulaciji}.
+Naivan pristup zahteva razmatranje svih $\binom{m}{2} = O(m^2)$ ivica potpunog grafa, a zatim primenu standardnog MST algoritma (Kruskal ili Prim), što daje složenost $O(m^2 \log m)$. Rešenje implementirano u ovom projektu umesto toga koristi geometrijsko svojstvo problema kako bi se broj razmatranih ivica sveo sa $O(m^2)$ na $O(m)$, čime se dobija efikasniji algoritam zasnovan na \textbf{Delone triangulaciji}.
 
 \section{Teorijska pozadina}
 
@@ -85,14 +90,16 @@ Kruskalov algoritam konstruiše MST tako što ivice grafa sortira po težini u r
 
 Ključno teorijsko svojstvo na kome se zasniva ovo rešenje glasi:
 
-\begin{quote}
-\textbf{Teorema.} Za proizvoljan skup tačaka $P$ u opštoj poziciji, minimalno razapinjuće stablo nad potpunim  grafom $K(P)$ jeste podgraf Delone triangulacije $DT(P)$, tj. $MST(P) \subseteq DT(P)$.
-\end{quote}
-Skica dokaza zasniva se na kontrapoziciji: pretpostavimo da ivica $(u,v) \in MST(P)$ ne pripada $DT(P)$. Tada, po definiciji Delone triangulacije, ne postoji kružnica kroz $u$ i $v$ koja ne sadrži ostale tačke -- svaka takva kružnica sadrži bar jednu dodatnu tačku $w$. Može se pokazati da tada važi $\max(d(u,w), d(v,w)) < d(u,v)$, što znači da bi zamena ivice $(u,v)$ ivicama $(u,w)$ i $(w,v)$ (ili samo jednom od njih, u kombinaciji sa preostalim stablom) dala razapinjuće stablo manje ukupne težine -- kontradikcija sa pretpostavkom da je $(u,v)$ deo \emph{minimalnog} stabla \cite[Teorema 6.9]{preparata_shamos}. Ova teorema opravdava da implementacija MST ne traži nad svih $O(m^2)$ ivica, već isključivo nad $O(m)$ ivica Delone triangulacije, bez gubitka tačnosti rešenja.
+\begin{theorem}[Teorema o podskupu]
+\label{def:teorema}
+Za proizvoljan skup tačaka $P$ u opštoj poziciji, minimalno razapinjuće stablo nad potpunim  grafom $K(P)$ jeste podgraf Delone triangulacije $DT(P)$, tj. $MST(P) \subseteq DT(P)$.
+\end{theorem}
+Skica dokaza zasniva se na kontrapoziciji: pretpostavimo da ivica $(u,v) \in MST(P)$ ne pripada $DT(P)$. Tada, po definiciji Delone triangulacije, ne postoji kružnica kroz $u$ i $v$ koja ne sadrži ostale tačke -- svaka takva kružnica sadrži bar jednu dodatnu tačku $w$. Može se pokazati da tada važi $\max(d(u,w), d(v,w)) < d(u,v)$, što znači da bi zamena ivice $(u,v)$ ivicama $(u,w)$ i $(w,v)$ (ili samo jednom od njih, u kombinaciji sa preostalim stablom) dala razapinjuće stablo manje ukupne težine -- kontradikcija sa pretpostavkom da je $(u,v)$ deo \emph{minimalnog} stabla \cite[Teorema 6.9]{preparata_shamos}. Ova teorema opravdava da se implementacija MST ne traži nad svih $O(m^2)$ ivica, već isključivo nad $O(m)$ ivica Delone triangulacije, bez gubitka tačnosti rešenja.
 
 \section{Arhitektura implementacije}
 
-Rešenje je organizovano u tri logičke celine: reprezentaciju geometrijskih primitiva (\texttt{components.h}), konstrukciju Delone triangulacije i računanje MST-a (\texttt{solver.cpp}), i Qt sloj za učitavanje ulaza i vizuelizaciju (\texttt{mainwindow}, \texttt{canvas}).\\
+Rešenje je organizovano u tri logičke celine: reprezentaciju geometrijskih primitiva (\texttt{components.h}), konstrukciju Delone triangulacije i računanje MST-a (\texttt{solver.cpp}), i Qt sloj za učitavanje ulaza i vizuelizaciju (\texttt{mainwindow}, \texttt{canvas}). 
+\\
 Osnovna struktura \texttt{Point} čuva koordinate $(x, y)$ i identifikator ostrva:
 \begin{verbatim}
 struct Point { double x, y; int id; };
@@ -152,7 +159,8 @@ Posebno posmatramo granične slučajeve $m=1$ (stablo je prazno) i $m=2$ (jedina
 
 \section{Ispravnost rešenja}
 
-Ispravnost implementiranog algoritma proizilazi direktno iz teoreme iz sekcije 2.3: pošto je $MST(P) \subseteq DT(P)$ garantovano za svaki skup tačaka u opštem slučaju, primena Kruskalovog algoritma isključivo nad ivicama $DT(P)$ mora proizvesti \emph{identično} stablo kao i primena istog algoritma nad svim $O(m^2)$ ivicama potpunog grafa -- razlika je isključivo u efikasnosti pretrage, ne u skupu razmatranih kandidata za konačno rešenje. Korektnost same Union-Find strukture, da nikada ne dozvoljava formiranje ciklusa i da na kraju daje povezano stablo kada je ulazni graf povezan, nam je dobro poznat rezultat teorije algoritama \cite{cormen}.
+Ispravnost implementiranog algoritma proizilazi direktno iz teoreme iz sekcije 2.3: pošto je $MST(P) \subseteq DT(P)$ garantovano za svaki skup tačaka u opštem slučaju, primena Kruskalovog algoritma isključivo nad ivicama $DT(P)$ mora proizvesti \emph{identično} stablo kao i primena istog algoritma nad svim $O(m^2)$ ivicama potpunog grafa -- razlika je isključivo u efikasnosti pretrage, ne u skupu razmatranih kandidata za konačno rešenje. \\
+Korektnost same Union-Find strukture, da nikada ne dozvoljava formiranje ciklusa i da na kraju daje povezano stablo kada je ulazni graf povezan, nam je dobro poznat rezultat teorije algoritama \cite{cormen}.
 
 \section{Zaključak}
 
