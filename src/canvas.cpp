@@ -80,6 +80,7 @@ void Canvas::resetVisualizationState()
     m_finalOnly = false;
     m_visibleDelaunayEdges = 0;
     m_visibleMstEdges = 0;
+    m_playbackStarted = false;
     m_playTimer.stop();
 }
 
@@ -91,6 +92,7 @@ void Canvas::setPoints(const QVector<QPointF>& points)
     m_pts = points;
     m_hasResult = false;
     update();
+    emit stateChanged();
 }
 
 void Canvas::setResult(const SolverResult& result)
@@ -99,6 +101,7 @@ void Canvas::setResult(const SolverResult& result)
     m_result = result;
     m_hasResult = true;
     update();
+    emit stateChanged();
 }
 
 void Canvas::showDelaunay()
@@ -108,9 +111,11 @@ void Canvas::showDelaunay()
     }
 
     m_playTimer.stop();
+    m_playbackStarted = false;
     setPhase(ShowDelaunay);
     m_visibleDelaunayEdges = m_result.delaunayEdges.size();
     m_visibleMstEdges = 0;
+    emit stateChanged();
 }
 
 void Canvas::showMstAll()
@@ -120,10 +125,12 @@ void Canvas::showMstAll()
     }
 
     m_playTimer.stop();
+    m_playbackStarted = false;
     m_finalOnly = true;
     setPhase(ShowMst);
     m_visibleDelaunayEdges = m_result.delaunayEdges.size();
     update();
+    emit stateChanged();
 }
 
 void Canvas::showMstStepByStep()
@@ -133,11 +140,13 @@ void Canvas::showMstStepByStep()
     }
 
     m_playTimer.stop();
+    m_playbackStarted = false;
     m_finalOnly = false;
     setPhase(ShowMst);
     m_visibleDelaunayEdges = m_result.delaunayEdges.size();
     m_visibleMstEdges = 0;
     update();
+    emit stateChanged();
 }
 
 void Canvas::playStepByStep()
@@ -146,12 +155,17 @@ void Canvas::playStepByStep()
         return;
     }
 
-    m_finalOnly = false;
-    setPhase(ShowDelaunay);
-    m_visibleDelaunayEdges = 0;
-    m_visibleMstEdges = 0;
+    if (!m_playbackStarted) {
+        m_finalOnly = false;
+        setPhase(ShowDelaunay);
+        m_visibleDelaunayEdges = 0;
+        m_visibleMstEdges = 0;
+        m_playbackStarted = true;
+    }
+
     m_playTimer.start(m_stepIntervalMs);
     update();
+    emit stateChanged();
 }
 
 void Canvas::nextMstEdge()
@@ -163,12 +177,14 @@ void Canvas::nextMstEdge()
     if (m_visibleMstEdges < m_result.mstConsideredEdges.size()) {
         ++m_visibleMstEdges;
         update();
+        emit stateChanged();
     }
 }
 
 void Canvas::pausePlayback()
 {
     m_playTimer.stop();
+    emit stateChanged();
 }
 
 void Canvas::setStepIntervalMs(int ms)
@@ -179,17 +195,74 @@ void Canvas::setStepIntervalMs(int ms)
     }
 }
 
+int Canvas::pointCount() const
+{
+    return m_pts.size();
+}
+
+int Canvas::visibleDelaunayEdges() const
+{
+    return m_visibleDelaunayEdges;
+}
+
+int Canvas::delaunayEdgeCount() const
+{
+    return m_result.delaunayEdges.size();
+}
+
+int Canvas::visibleMstEdges() const
+{
+    return m_visibleMstEdges;
+}
+
+int Canvas::mstConsideredEdgeCount() const
+{
+    return m_result.mstConsideredEdges.size();
+}
+
+int Canvas::mstEdgeCount() const
+{
+    return m_result.mstEdges.size();
+}
+
+double Canvas::mstLength() const
+{
+    return m_result.mstLength;
+}
+
+qreal Canvas::zoomFactor() const
+{
+    return m_zoomFactor;
+}
+
+QPointF Canvas::panOffset() const
+{
+    return m_panOffset;
+}
+
+bool Canvas::isPlaying() const
+{
+    return m_playTimer.isActive();
+}
+
+Canvas::Phase Canvas::phase() const
+{
+    return m_phase;
+}
+
 void Canvas::resetZoom()
 {
     m_zoomFactor = 1.0;
     m_panOffset = {};
     update();
+    emit stateChanged();
 }
 
 void Canvas::setPhase(Phase phase)
 {
     m_phase = phase;
     update();
+    emit stateChanged();
 }
 
 void Canvas::advancePlayback()
@@ -203,6 +276,7 @@ void Canvas::advancePlayback()
         if (m_visibleDelaunayEdges < m_result.delaunayEdges.size()) {
             ++m_visibleDelaunayEdges;
             update();
+            emit stateChanged();
             return;
         }
 
@@ -215,8 +289,11 @@ void Canvas::advancePlayback()
         if (m_visibleMstEdges < m_result.mstConsideredEdges.size()) {
             ++m_visibleMstEdges;
             update();
+            emit stateChanged();
         } else {
             m_playTimer.stop();
+            m_playbackStarted = false;
+            emit stateChanged();
         }
     }
 }
@@ -467,6 +544,7 @@ void Canvas::mouseMoveEvent(QMouseEvent* event)
     m_panOffset += currentPosition - m_lastPanPosition;
     m_lastPanPosition = currentPosition;
     update();
+    emit stateChanged();
     event->accept();
 }
 
@@ -492,5 +570,6 @@ void Canvas::wheelEvent(QWheelEvent* event)
     const qreal zoomStep = event->angleDelta().y() > 0 ? 1.15 : 1.0 / 1.15;
     m_zoomFactor = std::clamp(m_zoomFactor * zoomStep, 0.5, 20.0);
     update();
+    emit stateChanged();
     event->accept();
 }

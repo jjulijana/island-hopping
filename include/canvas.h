@@ -31,6 +31,21 @@ public:
     void setStepIntervalMs(int ms);
     void resetZoom();
 
+    int pointCount() const;
+    int visibleDelaunayEdges() const;
+    int delaunayEdgeCount() const;
+    int visibleMstEdges() const;
+    int mstConsideredEdgeCount() const;
+    int mstEdgeCount() const;
+    double mstLength() const;
+    qreal zoomFactor() const;
+    QPointF panOffset() const;
+    bool isPlaying() const;
+    Phase phase() const;
+
+signals:
+    void stateChanged();
+
 protected:
     void paintEvent(QPaintEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
@@ -62,5 +77,6 @@ private:
     QPointF m_panOffset;
     QPointF m_lastPanPosition;
     bool m_isPanning = false;
+    bool m_playbackStarted = false;
     QTimer m_playTimer;
 };

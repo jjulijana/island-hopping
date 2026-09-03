@@ -1,11 +1,14 @@
 #include "mainwindow.h"
 #include "canvas.h"
 
+#include <chrono>
+
 #include <QFile>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QDoubleSpinBox>
+#include <QFrame>
 #include <QTextStream>
 #include <QVBoxLayout>
 #include <QCoreApplication>
@@ -64,6 +67,11 @@ MainWindow::MainWindow(QWidget* parent)
     m_status = new QLabel("Load a case, then run the algorithm.");
     root->addWidget(m_status);
 
+    m_statistics = new QLabel;
+    m_statistics->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
+    m_statistics->setMargin(8);
+    root->addWidget(m_statistics);
+
     m_canvas = new Canvas;
     root->addWidget(m_canvas, 1);
 
@@ -92,6 +100,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_nextEdgeButton, &QPushButton::clicked, this, &MainWindow::nextMstEdge);
     connect(resetZoomButton, &QPushButton::clicked, m_canvas, &Canvas::resetZoom);
     connect(m_intervalSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::intervalChanged);
+    connect(m_canvas, &Canvas::stateChanged, this, &MainWindow::updateStatistics);
 
     loadExampleCases();
     if (!m_cases.isEmpty()) {
@@ -148,6 +157,7 @@ void MainWindow::showCase(int index)
     }
 
     m_caseIndex = index;
+    m_algorithmTimeMs = 0.0;
     m_title->setText(QString("10cases.txt - case %1/%2").arg(index + 1).arg(m_cases.size()));
     m_canvas->setPoints(m_cases[index]);
     m_canvas->setResult(SolverResult{});
@@ -160,7 +170,10 @@ void MainWindow::runAlgorithm()
         return;
     }
 
+    const auto startTime = std::chrono::steady_clock::now();
     const SolverResult result = Solver::solve(m_cases[m_caseIndex]);
+    const auto endTime = std::chrono::steady_clock::now();
+    m_algorithmTimeMs = std::chrono::duration<double, std::milli>(endTime - startTime).count();
     m_canvas->setResult(result);
     m_canvas->showDelaunay();
     m_status->setText(QString("Delaunay ready. MST length: %1, edges: %2")
@@ -208,4 +221,30 @@ void MainWindow::pausePlayback()
 void MainWindow::intervalChanged(double seconds)
 {
     m_canvas->setStepIntervalMs(static_cast<int>(seconds * 1000.0));
+}
+
+void MainWindow::updateStatistics()
+{
+    QString phaseText = "Idle";
+    if (m_canvas->phase() == Canvas::ShowDelaunay) {
+        phaseText = "Delaunay";
+    } else if (m_canvas->phase() == Canvas::ShowMst) {
+        phaseText = "MST";
+    }
+
+    const QPointF pan = m_canvas->panOffset();
+    m_statistics->setText(QString("Islands: %1    |    Algorithm time: %9 ms    |    Mode: %2    |    Delaunay edges: %3/%4    |    MST considered: %5/%6    |    MST edges: %7    |    MST length: %8    |    Zoom: %10x    |    Pan: (%11, %12)    |    %13")
+                              .arg(m_canvas->pointCount())
+                              .arg(phaseText)
+                              .arg(m_canvas->visibleDelaunayEdges())
+                              .arg(m_canvas->delaunayEdgeCount())
+                              .arg(m_canvas->visibleMstEdges())
+                              .arg(m_canvas->mstConsideredEdgeCount())
+                              .arg(m_canvas->mstEdgeCount())
+                              .arg(m_canvas->mstLength(), 0, 'f', 3)
+                              .arg(m_algorithmTimeMs, 0, 'f', 3)
+                              .arg(m_canvas->zoomFactor(), 0, 'f', 2)
+                              .arg(pan.x(), 0, 'f', 0)
+                              .arg(pan.y(), 0, 'f', 0)
+                              .arg(m_canvas->isPlaying() ? "Playing" : "Paused"));
 }

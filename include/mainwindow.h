@@ -27,10 +27,12 @@ private:
     void playStepByStep();
     void pausePlayback();
     void intervalChanged(double seconds);
+    void updateStatistics();
 
     Canvas* m_canvas = nullptr;
     QLabel* m_title = nullptr;
     QLabel* m_status = nullptr;
+    QLabel* m_statistics = nullptr;
     QPushButton* m_runButton = nullptr;
     QPushButton* m_playButton = nullptr;
     QPushButton* m_pauseButton = nullptr;
@@ -41,4 +43,5 @@ private:
     QDoubleSpinBox* m_intervalSpin = nullptr;
     QVector<QVector<QPointF>> m_cases;
     int m_caseIndex = 0;
+    double m_algorithmTimeMs = 0.0;
 };
