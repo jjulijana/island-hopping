@@ -1,6 +1,16 @@
 # island-hopping
 You are a contractor for the small independent nation of Microisles, which is far out in the Pacific ocean, and made up of a large number of islands. The islanders travel between islands on boats, but the government has hired you to design a set of bridges that would connect all the islands together. However, they want to do this at a minimum cost.
 
+## Author
+
+- Julijana Jevtić — [`jjulijana`](https://github.com/jjulijana), index: `1131/2025`
+
+## Problem formulation
+
+The project is inspired (solution to):
+
+Greg Hamerly - [Island Hopping](https://open.kattis.com/problems/islandhopping), 2015.
+
 
 ## Running app
 
@@ -25,6 +35,8 @@ cmake --build build
 
 ## Testing
 
+All coordinates are within [-1000, 1000] and have at most three decimal places.
+
 `10cases.txt` (n=10) covers:
 
 - m=1 — single island, cost should be exactly 0
@@ -39,4 +51,13 @@ cmake --build build
 - The official sample case 2 — included as a self-check against Kattis's published answer
 
 `stress_test.txt`:
-- bonus stress test at the maximum size (m=750, the upper limit)
+Bonus stress test at the maximum (10 cases each m=750, the upper limit) with cases 2–10 now using different geometric distributions:
+- grid
+- spiral
+- clusters
+- boundary perimeter
+- diagonal bands
+- dense cluster
+- concentric rings
+- vertical groups
+- pseudo-random spread
