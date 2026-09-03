@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+#include "canvas.h"
 
 #include <QFile>
 #include <QHBoxLayout>

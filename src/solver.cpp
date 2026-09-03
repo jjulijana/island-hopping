@@ -4,6 +4,14 @@
 #include <CGAL/Delaunay_triangulation_2.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
+#include <algorithm>
+#include <map>
+#include <set>
+#include <tuple>
+#include <vector>
+
+using namespace std;
+
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
 typedef CGAL::Delaunay_triangulation_2<K> Delaunay;
 typedef Delaunay::Vertex_handle Vertex_handle;

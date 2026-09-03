@@ -4,8 +4,7 @@
 #include <QPointF>
 #include <QVector>
 
-#include "canvas.h"
-
+class Canvas;
 class QLabel;
 class QPushButton;
 class QDoubleSpinBox;

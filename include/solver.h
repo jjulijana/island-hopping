@@ -1,5 +1,4 @@
 #pragma once
-#include "components.h"
 
 #include <QPair>
 #include <QPointF>
@@ -13,12 +12,8 @@ struct SolverResult {
     QVector<QPair<int, int>> mstEdges;
     QVector<double> mstEdgeLengths;
     double mstLength = 0.0;
-}; 
+};
 
-class Solver
-{
-
-public: 
-    static SolverResult solve(const QVector<QPointF>& points); 
-
-}; 
+namespace Solver {
+    SolverResult solve(const QVector<QPointF>& points);
+}

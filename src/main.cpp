@@ -6,6 +6,7 @@
 #include <string>
 
 #include "mainwindow.h"
+#include "solver.h"
 
 namespace {
 
