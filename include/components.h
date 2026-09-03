@@ -1,8 +1,5 @@
 #pragma once
-#include <bits/stdc++.h>
-using namespace std;
-
-const double EPS = 1e-9;
+#include <cmath>
 
 struct Point {
     double x, y;
@@ -15,16 +12,5 @@ inline double dist2(const Point& a, const Point& b) {
 }
 
 inline double dist(const Point& a, const Point& b) {
-    return sqrt(dist2(a, b));
-}
-
-struct Edge {
-    Point p, q;
-};
-
-inline bool edgesEqual(const Edge& e1, const Edge& e2) {
-    return (fabs(e1.p.x - e2.p.x) < EPS && fabs(e1.p.y - e2.p.y) < EPS &&
-            fabs(e1.q.x - e2.q.x) < EPS && fabs(e1.q.y - e2.q.y) < EPS) ||
-           (fabs(e1.p.x - e2.q.x) < EPS && fabs(e1.p.y - e2.q.y) < EPS &&
-            fabs(e1.q.x - e2.p.x) < EPS && fabs(e1.q.y - e2.p.y) < EPS);
+    return std::sqrt(dist2(a, b));
 }
