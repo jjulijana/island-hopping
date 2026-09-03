@@ -72,39 +72,28 @@ Canvas::Canvas(QWidget* parent)
     connect(&m_playTimer, &QTimer::timeout, this, &Canvas::advancePlayback);
 }
 
-void Canvas::reset()
+void Canvas::resetVisualizationState()
 {
-    m_pts.clear();
-    m_result = {};
-    m_hasResult = false;
     m_phase = Idle;
     m_finalOnly = false;
     m_visibleDelaunayEdges = 0;
     m_visibleMstEdges = 0;
     m_playTimer.stop();
-    update();
 }
 
 void Canvas::setPoints(const QVector<QPointF>& points)
 {
+    resetVisualizationState();
     m_pts = points;
     m_hasResult = false;
-    m_phase = Idle;
-    m_finalOnly = false;
-    m_visibleDelaunayEdges = 0;
-    m_visibleMstEdges = 0;
-    m_playTimer.stop();
     update();
 }
 
 void Canvas::setResult(const SolverResult& result)
 {
+    resetVisualizationState();
     m_result = result;
     m_hasResult = true;
-    m_finalOnly = false;
-    m_visibleDelaunayEdges = 0;
-    m_visibleMstEdges = 0;
-    m_playTimer.stop();
     update();
 }
 

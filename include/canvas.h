@@ -18,11 +18,10 @@ public:
 
     explicit Canvas(QWidget* parent = nullptr);
 
-    void reset();
     void setPoints(const QVector<QPointF>& points);
     void setResult(const SolverResult& result);
     void showDelaunay();
-    void showMstAll();          // final MST only, no considered/rejected edges
+    void showMstAll();
     void showMstStepByStep();
     void playStepByStep();
     void nextMstEdge();
@@ -40,6 +39,7 @@ private:
     void drawMst(QPainter& painter, const QVector<QPointF>& fittedPoints);
     void drawFinalMst(QPainter& painter, const QVector<QPointF>& fittedPoints);
     void drawPoints(QPainter& painter, const QVector<QPointF>& fittedPoints);
+    void resetVisualizationState();
     void setPhase(Phase phase);
     void advancePlayback();
 
