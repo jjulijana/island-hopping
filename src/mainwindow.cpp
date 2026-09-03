@@ -34,6 +34,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_mstAllButton = new QPushButton("Show MST");
     m_mstStepButton = new QPushButton("MST step mode");
     m_nextEdgeButton = new QPushButton("Next MST edge");
+    auto* resetZoomButton = new QPushButton("Reset zoom");
     m_intervalSpin = new QDoubleSpinBox;
     m_intervalSpin->setRange(0.1, 5.0);
     m_intervalSpin->setSingleStep(0.1);
@@ -55,6 +56,7 @@ MainWindow::MainWindow(QWidget* parent)
     controlRow->addWidget(m_mstAllButton);
     controlRow->addWidget(m_mstStepButton);
     controlRow->addWidget(m_nextEdgeButton);
+    controlRow->addWidget(resetZoomButton);
     controlRow->addWidget(new QLabel("Interval"));
     controlRow->addWidget(m_intervalSpin);
     root->addLayout(controlRow);
@@ -88,6 +90,7 @@ MainWindow::MainWindow(QWidget* parent)
     connect(m_mstAllButton, &QPushButton::clicked, this, &MainWindow::showMstAll);
     connect(m_mstStepButton, &QPushButton::clicked, this, &MainWindow::startMstStepByStep);
     connect(m_nextEdgeButton, &QPushButton::clicked, this, &MainWindow::nextMstEdge);
+    connect(resetZoomButton, &QPushButton::clicked, m_canvas, &Canvas::resetZoom);
     connect(m_intervalSpin, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, &MainWindow::intervalChanged);
 
     loadExampleCases();

@@ -7,7 +7,9 @@
 #include <QWidget>
 #include <QTimer>
 
+class QMouseEvent;
 class QPainter;
+class QWheelEvent;
 
 class Canvas : public QWidget
 {
@@ -27,10 +29,15 @@ public:
     void nextMstEdge();
     void pausePlayback();
     void setStepIntervalMs(int ms);
+    void resetZoom();
 
 protected:
     void paintEvent(QPaintEvent* event) override;
     void resizeEvent(QResizeEvent* event) override;
+    void mousePressEvent(QMouseEvent* event) override;
+    void mouseMoveEvent(QMouseEvent* event) override;
+    void mouseReleaseEvent(QMouseEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
 
 private:
     QVector<QPointF> fitPoints() const;
@@ -51,5 +58,9 @@ private:
     int m_visibleDelaunayEdges = 0;
     int m_visibleMstEdges = 0;
     int m_stepIntervalMs = 500;
+    qreal m_zoomFactor = 1.0;
+    QPointF m_panOffset;
+    QPointF m_lastPanPosition;
+    bool m_isPanning = false;
     QTimer m_playTimer;
 };

@@ -4,8 +4,10 @@
 #include <cmath>
 
 #include <QFontMetricsF>
+#include <QMouseEvent>
 #include <QPainter>
 #include <QResizeEvent>
+#include <QWheelEvent>
 
 namespace {
 QPointF mapPoint(const QPointF& point, const QRectF& src, const QRectF& dst)
@@ -84,6 +86,8 @@ void Canvas::resetVisualizationState()
 void Canvas::setPoints(const QVector<QPointF>& points)
 {
     resetVisualizationState();
+    m_zoomFactor = 1.0;
+    m_panOffset = {};
     m_pts = points;
     m_hasResult = false;
     update();
@@ -175,6 +179,13 @@ void Canvas::setStepIntervalMs(int ms)
     }
 }
 
+void Canvas::resetZoom()
+{
+    m_zoomFactor = 1.0;
+    m_panOffset = {};
+    update();
+}
+
 void Canvas::setPhase(Phase phase)
 {
     m_phase = phase;
@@ -234,8 +245,10 @@ QVector<QPointF> Canvas::fitPoints() const
 
     QVector<QPointF> fitted;
     fitted.reserve(m_pts.size());
+    const QPointF center = rect().center();
     for (const auto& point : m_pts) {
-        fitted.append(mapPoint(point, src, dst));
+        const QPointF mapped = mapPoint(point, src, dst);
+        fitted.append(center + (mapped - center) * m_zoomFactor + m_panOffset);
     }
     return fitted;
 }
@@ -428,4 +441,56 @@ void Canvas::drawPoints(QPainter& painter, const QVector<QPointF>& fittedPoints)
 void Canvas::resizeEvent(QResizeEvent*)
 {
     update();
+}
+
+void Canvas::mousePressEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton) {
+        m_isPanning = true;
+        m_lastPanPosition = event->position();
+        setCursor(Qt::ClosedHandCursor);
+        event->accept();
+        return;
+    }
+
+    event->ignore();
+}
+
+void Canvas::mouseMoveEvent(QMouseEvent* event)
+{
+    if (!m_isPanning) {
+        event->ignore();
+        return;
+    }
+
+    const QPointF currentPosition = event->position();
+    m_panOffset += currentPosition - m_lastPanPosition;
+    m_lastPanPosition = currentPosition;
+    update();
+    event->accept();
+}
+
+void Canvas::mouseReleaseEvent(QMouseEvent* event)
+{
+    if (event->button() == Qt::LeftButton && m_isPanning) {
+        m_isPanning = false;
+        unsetCursor();
+        event->accept();
+        return;
+    }
+
+    event->ignore();
+}
+
+void Canvas::wheelEvent(QWheelEvent* event)
+{
+    if (event->angleDelta().y() == 0) {
+        event->ignore();
+        return;
+    }
+
+    const qreal zoomStep = event->angleDelta().y() > 0 ? 1.15 : 1.0 / 1.15;
+    m_zoomFactor = std::clamp(m_zoomFactor * zoomStep, 0.5, 20.0);
+    update();
+    event->accept();
 }
