@@ -1,6 +1,8 @@
 # island-hopping
 You are a contractor for the small independent nation of Microisles, which is far out in the Pacific ocean, and made up of a large number of islands. The islanders travel between islands on boats, but the government has hired you to design a set of bridges that would connect all the islands together. However, they want to do this at a minimum cost.
 
+![alt text](/documentation/image.png)
+
 ## Author
 
 - Julijana Jevtić — [`jjulijana`](https://github.com/jjulijana), index: `1131/2025`
@@ -11,23 +13,39 @@ The project is inspired (solution to):
 
 Greg Hamerly - [Island Hopping](https://open.kattis.com/problems/islandhopping), 2015.
 
+## Dependencies and installation
 
-## Running app
+The project requires:
 
+- CMake 3.16 or newer
+- A C++ compiler with C++17 support
+- Qt 6 Widgets
+- CGAL
+
+On Ubuntu or Debian, install the dependencies with:
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake qt6-base-dev libcgal-dev
 ```
-mkdir build
+
+Configure and build the project from its root directory:
+
+```bash
 cmake -S . -B build
 cmake --build build
 ```
 
+## Running app
+
 ```
 ./build/island-hopping
 ```
- or
+ or for console running:
 ```
 ./build/island-hopping --console
 ```
- or
+ or for console running with specific file:
 ```
 ./build/island-hopping --console "path.txt"
 ```
